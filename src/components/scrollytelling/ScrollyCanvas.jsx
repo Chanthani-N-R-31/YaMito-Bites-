@@ -18,12 +18,17 @@ export default function ScrollyCanvas({ scrollYProgress, getFrame, isCriticalRea
   const { spring } = BOBA_CONFIG.scroll;
   const bgColor = BOBA_CONFIG.brand.colors.creamStudio; // #EEEBDC
 
+  // Responsive spring: On mobile, touch gesture has native momentum, so a light, snappy spring
+  // tracks the finger directly with 0ms lag; on desktop, a weighted spring gives luxury smoothness.
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const activeSpring = isMobile 
+    ? { stiffness: 260, damping: 32, mass: 0.05 }
+    : spring;
+
   // Map scroll progress (0..0.85) to frame indices (0..totalFrames - 1)
-  // Leaves 15% scroll runway at the bottom so the final exploded reveal holds and is fully viewed
-  // without the next section prematurely covering it!
   const rawFrameIndex = useTransform(scrollYProgress, [0, 0.85], [0, totalFrames - 1], { clamp: true });
-  // Smooth spring physics for fluid momentum without snapping
-  const smoothFrameIndex = useSpring(rawFrameIndex, spring);
+  // Smooth physics without snapping or sticking
+  const smoothFrameIndex = useSpring(rawFrameIndex, activeSpring);
 
   // Core render function with maximum sharpness settings
   const renderFrame = useCallback(() => {
