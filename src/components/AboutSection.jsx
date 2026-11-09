@@ -30,7 +30,7 @@ export default function AboutSection({ onExploreMenu }) {
   return (
     <section 
       id="about" 
-      className="relative z-20 -mt-10 sm:-mt-20 rounded-t-[32px] sm:rounded-t-[56px] py-16 sm:py-28 px-4 sm:px-6 lg:px-8 bg-[#210D07] text-[#FAF6EC] overflow-hidden border-t border-[#E5A855]/35 shadow-[0_-25px_60px_rgba(0,0,0,0.6)]"
+      className="relative z-20 rounded-t-[32px] sm:rounded-t-[56px] py-16 sm:py-28 px-4 sm:px-6 lg:px-8 bg-[#210D07] text-[#FAF6EC] overflow-hidden border-t border-[#E5A855]/35 shadow-[0_-25px_60px_rgba(0,0,0,0.6)]"
     >
       {/* Warm Ambient Glows */}
       <div className="absolute top-1/4 -right-24 w-[500px] h-[500px] bg-[#E5A855]/12 rounded-full blur-[140px] pointer-events-none -z-10" />

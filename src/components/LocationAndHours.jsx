@@ -77,7 +77,7 @@ export default function LocationAndHours() {
                     <span>{copied ? 'Address Copied!' : 'Copy Address'}</span>
                   </button>
                   <a
-                    href={RESTAURANT_INFO.mapsUrl}
+                    href={RESTAURANT_INFO.deliveryPartners?.googleMaps || "https://maps.google.com/?q=YaMito+Bites+BTM+Layout+Bangalore"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#E5A855]/20 hover:bg-[#E5A855] text-xs font-bold text-[#E5A855] hover:text-[#170804] transition-colors"
@@ -128,57 +128,51 @@ export default function LocationAndHours() {
             </div>
           </div>
 
-          {/* Right Interactive Map / Location Preview */}
-          <div className="lg:col-span-7 h-full">
-            <div className="rounded-3xl overflow-hidden border border-[#E5A855]/25 shadow-2xl relative min-h-[420px] bg-gradient-to-br from-[#3A1A0E]/50 via-[#2B1209] to-[#210D07] flex flex-col justify-between p-6 sm:p-8">
+          {/* Right Interactive Google Map & Location Preview */}
+          <div className="lg:col-span-7 h-full flex flex-col">
+            <div className="rounded-3xl overflow-hidden border border-[#E5A855]/25 shadow-2xl relative min-h-[440px] flex-1 flex flex-col bg-[#170804]">
               
-              {/* Decorative Map Texture & Marker */}
-              <div className="space-y-4 relative z-10 text-left">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#E5A855]">
-                  BTM 2nd Stage Hub
-                </span>
-                <h3 className="font-extrabold text-2xl text-white">
-                  Steps away from 18th Main Signal
-                </h3>
-                <p className="text-sm text-[#FAF6EC]/70 max-w-md font-normal leading-relaxed">
-                  Surrounded by popular cafes and student hangouts in South Bangalore. Indoor & outdoor seating available with fast takeaway pickup counters.
-                </p>
-              </div>
+              {/* Interactive Google Map iframe */}
+              <div className="relative w-full h-[320px] sm:h-[350px] bg-[#170804] overflow-hidden">
+                <iframe
+                  title="YaMito Bites Google Maps"
+                  src={`https://maps.google.com/maps?q=${RESTAURANT_INFO.coordinates?.lat || 12.914002},${RESTAURANT_INFO.coordinates?.lng || 77.610864}&hl=en&z=16&output=embed`}
+                  className="w-full h-full border-0 filter brightness-95 contrast-105"
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
 
-              {/* Quick Landmarks list */}
-              <div className="space-y-2 py-6 relative z-10 text-left">
-                {[
-                  "Near Canara Bank, 18th Main BTM 2nd Stage",
-                  "5 minutes from Silk Board Junction",
-                  "8 minutes from Vega City Mall, Bannerghatta Road",
-                  "Easy two-wheeler & car parking available"
-                ].map((landmark, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-xs text-[#FAF6EC]/80">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#E5A855]" />
-                    <span>{landmark}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Maps CTA Button */}
-              <div className="relative z-10 pt-4 border-t border-[#E5A855]/15 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#E5A855]/20 text-[#E5A855] flex items-center justify-center font-bold">
-                    📍
-                  </div>
-                  <div className="text-left">
-                    <strong className="font-extrabold text-sm text-white">YaMito Bites</strong>
-                    <span className="text-xs text-[#FAF6EC]/60 block">Open Now on Google Maps</span>
-                  </div>
+                {/* Floating Map Pill */}
+                <div className="absolute top-3 left-3 bg-[#210D07]/90 backdrop-blur-md border border-[#E5A855]/30 px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-xl pointer-events-none">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-bold text-[#FAF6EC]">Live Location • 18th Main BTM</span>
                 </div>
+              </div>
+
+              {/* Map Information & Directions Action */}
+              <div className="p-5 sm:p-6 bg-gradient-to-br from-[#3A1A0E]/80 via-[#2B1209] to-[#210D07] border-t border-[#E5A855]/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📍</span>
+                    <strong className="font-extrabold text-sm sm:text-base text-white">
+                      YaMito Bites
+                    </strong>
+                  </div>
+                  <p className="text-xs text-[#FAF6EC]/70">
+                    {RESTAURANT_INFO.landmark} • Bengaluru, Karnataka 560076
+                  </p>
+                </div>
+
                 <a
-                  href={RESTAURANT_INFO.mapsUrl}
+                  href={RESTAURANT_INFO.deliveryPartners?.googleMaps || "https://maps.google.com/?q=YaMito+Bites+BTM+Layout+Bangalore"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#FAF6EC] hover:bg-white text-[#170804] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-[#FAF6EC] hover:bg-white text-[#170804] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer whitespace-nowrap min-h-[44px]"
                 >
-                  <span>Open in Google Maps</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <Navigation className="w-3.5 h-3.5 text-[#170804]" />
+                  <span>Get Directions</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-[#170804]" />
                 </a>
               </div>
 

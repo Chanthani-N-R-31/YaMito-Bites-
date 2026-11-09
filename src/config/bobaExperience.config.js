@@ -55,7 +55,7 @@ export const BOBA_CONFIG = {
   },
 
   scroll: {
-    containerHeight: "260vh",
+    containerHeight: "340vh",
     spring: {
       stiffness: 140,
       damping: 30,

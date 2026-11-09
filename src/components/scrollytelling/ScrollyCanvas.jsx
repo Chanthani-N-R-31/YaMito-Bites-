@@ -18,8 +18,10 @@ export default function ScrollyCanvas({ scrollYProgress, getFrame, isCriticalRea
   const { spring } = BOBA_CONFIG.scroll;
   const bgColor = BOBA_CONFIG.brand.colors.creamStudio; // #EEEBDC
 
-  // Map scroll progress (0..1) to frame indices (0..totalFrames - 1)
-  const rawFrameIndex = useTransform(scrollYProgress, [0, 1], [0, totalFrames - 1]);
+  // Map scroll progress (0..0.85) to frame indices (0..totalFrames - 1)
+  // Leaves 15% scroll runway at the bottom so the final exploded reveal holds and is fully viewed
+  // without the next section prematurely covering it!
+  const rawFrameIndex = useTransform(scrollYProgress, [0, 0.85], [0, totalFrames - 1], { clamp: true });
   // Smooth spring physics for fluid momentum without snapping
   const smoothFrameIndex = useSpring(rawFrameIndex, spring);
 
@@ -64,29 +66,74 @@ export default function ScrollyCanvas({ scrollYProgress, getFrame, isCriticalRea
     const imgW = img.width || BOBA_CONFIG.sequence.frameWidth;
     const imgH = img.height || BOBA_CONFIG.sequence.frameHeight;
 
-    // True edge-to-edge screen cover: scale MUST be >= scaleX and >= scaleY
-    // This guarantees renderW >= canvas.width and renderH >= canvas.height at all times,
-    // completely eliminating side gaps, pillars, and letterboxing across all displays.
-    const scale = Math.max(canvas.width / imgW, canvas.height / imgH);
+    // Responsive non-clipping framing:
+    // Ensures the straw, dome lid, exploding boba/shards, and cup base
+    // are NEVER cut off at the top or bottom on any screen resolution!
+    const isMobilePortrait = canvas.width < 768 * dpr && canvas.height > canvas.width;
 
-    const renderW = Math.round(imgW * scale);
-    const renderH = Math.round(imgH * scale);
+    let scale, renderW, renderH, dx, dy;
 
-    // Horizontal centering: (canvas.width - renderW) is <= 0, centering horizontal overflow symmetrically
-    const dx = Math.round((canvas.width - renderW) * 0.5);
-
-    // Vertical positioning:
-    // When screen is wider than 16:9 (e.g. desktop/laptop), renderH is taller than canvas.height.
-    // We pin dy close to 0 so the straw, dome lid, and cup are always gracefully in view.
-    let dy = 0;
-    if (canvas.height > renderH) {
-      dy = Math.round((canvas.height - renderH) * 0.5);
+    if (isMobilePortrait) {
+      // Mobile portrait: fit height 100% and center horizontally
+      scale = canvas.height / imgH;
+      renderW = Math.round(imgW * scale);
+      renderH = Math.round(imgH * scale);
+      dx = Math.round((canvas.width - renderW) * 0.5);
+      dy = 0;
     } else {
-      dy = Math.max(Math.round((canvas.height - renderH) * 0.15), Math.round(-25 * dpr * scale));
+      // Landscape desktop/laptop:
+      // Provide clearance below the navbar and above the bottom edge
+      // so neither the straw tip nor the cup bottom base is ever clipped!
+      const topClearance = Math.round(28 * dpr);
+      const bottomClearance = Math.round(20 * dpr);
+      const availableHeight = canvas.height - topClearance - bottomClearance;
+
+      scale = Math.min(canvas.width / (imgW * 0.65), availableHeight / imgH);
+      renderW = Math.round(imgW * scale);
+      renderH = Math.round(imgH * scale);
+      dx = Math.round((canvas.width - renderW) * 0.5);
+      dy = topClearance + Math.round((availableHeight - renderH) * 0.5);
     }
 
-    // Render frame edge-to-edge
+    // Render frame
     ctx.drawImage(img, dx, dy, renderW, renderH);
+
+    // If there is lateral canvas space on wide landscape displays,
+    // softly feather the outer edges into the studio background
+    // to guarantee an invisibly seamless blend with zero harsh lines.
+    if (dx > 0) {
+      const featherW = Math.min(Math.round(48 * dpr), renderW * 0.08);
+
+      // Left edge feather
+      const leftGrad = ctx.createLinearGradient(dx, 0, dx + featherW, 0);
+      leftGrad.addColorStop(0, bgColor);
+      leftGrad.addColorStop(1, 'rgba(200, 195, 183, 0)');
+      ctx.fillStyle = leftGrad;
+      ctx.fillRect(dx - 1, dy, featherW + 1, renderH);
+
+      // Right edge feather
+      const rightGrad = ctx.createLinearGradient(dx + renderW - featherW, 0, dx + renderW, 0);
+      rightGrad.addColorStop(0, 'rgba(200, 195, 183, 0)');
+      rightGrad.addColorStop(1, bgColor);
+      ctx.fillStyle = rightGrad;
+      ctx.fillRect(dx + renderW - featherW, dy, featherW + 1, renderH);
+
+      // Top / bottom gentle feather
+      if (dy > 0) {
+        const featherH = Math.min(Math.round(20 * dpr), dy);
+        const topGrad = ctx.createLinearGradient(0, dy, 0, dy + featherH);
+        topGrad.addColorStop(0, bgColor);
+        topGrad.addColorStop(1, 'rgba(200, 195, 183, 0)');
+        ctx.fillStyle = topGrad;
+        ctx.fillRect(0, dy - 1, canvas.width, featherH + 1);
+
+        const bottomGrad = ctx.createLinearGradient(0, dy + renderH - featherH, 0, dy + renderH);
+        bottomGrad.addColorStop(0, 'rgba(200, 195, 183, 0)');
+        bottomGrad.addColorStop(1, bgColor);
+        ctx.fillStyle = bottomGrad;
+        ctx.fillRect(0, dy + renderH - featherH, canvas.width, featherH + 2);
+      }
+    }
   }, [getFrame, bgColor]);
 
   const requestRender = useCallback(() => {
